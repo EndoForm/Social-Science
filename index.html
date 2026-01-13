@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -186,17 +187,30 @@
             font-family: 'Fira Code', monospace;
         }
 
-        .result-card.baseline .value { color: var(--text-secondary); }
-        .result-card.paper .value { color: var(--warning); }
-        .result-card.yours .value { color: var(--secondary); }
+        .result-card.baseline .value {
+            color: var(--text-secondary);
+        }
+
+        .result-card.paper .value {
+            color: var(--warning);
+        }
+
+        .result-card.yours .value {
+            color: var(--secondary);
+        }
 
         .result-card .delta {
             font-size: 0.8rem;
             margin-top: 0.3rem;
         }
 
-        .delta.positive { color: var(--secondary); }
-        .delta.negative { color: var(--danger); }
+        .delta.positive {
+            color: var(--secondary);
+        }
+
+        .delta.negative {
+            color: var(--danger);
+        }
 
         .chart-container {
             position: relative;
@@ -223,8 +237,14 @@
             font-weight: 500;
         }
 
-        .comparison-table .paper-col { color: var(--warning); }
-        .comparison-table .yours-col { color: var(--secondary); font-weight: 600; }
+        .comparison-table .paper-col {
+            color: var(--warning);
+        }
+
+        .comparison-table .yours-col {
+            color: var(--secondary);
+            font-weight: 600;
+        }
 
         .toggle-group {
             display: flex;
@@ -269,8 +289,15 @@
             font-weight: 600;
         }
 
-        .badge.paper { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .badge.alt { background: rgba(16, 185, 129, 0.2); color: var(--secondary); }
+        .badge.paper {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .badge.alt {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--secondary);
+        }
 
         .insight-box {
             background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1));
@@ -314,16 +341,163 @@
             align-items: center;
             margin-bottom: 1.5rem;
         }
+
+        .help-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 0.4rem;
+            transition: all 0.2s;
+        }
+
+        .help-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .label-with-help {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            animation: modalIn 0.2s ease-out;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .modal-body p {
+            margin-bottom: 0.75rem;
+        }
+
+        .modal-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-body strong {
+            color: var(--text-primary);
+        }
+
+        .modal-body .highlight {
+            background: rgba(37, 99, 235, 0.15);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+            margin: 0.75rem 0;
+        }
+
+        .modal-body .formula {
+            font-family: 'Fira Code', monospace;
+            background: var(--bg-input);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 0.5rem 0;
+        }
     </style>
 </head>
+
 <body>
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title">Parameter Help</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <h1>🏠 Housing Affordability Model Explorer</h1>
             <p class="subtitle">Interactive simulation of Fingleton, Fuerst & Szumilo (2018)</p>
             <div class="paper-ref">
                 <h3>Paper's Core Claim:</h3>
-                <p class="paper-claim">"Building 1.6 million homes in London would only reduce affordability from 11.7 → 10.1"</p>
+                <p class="paper-claim">"Building 1.6 million homes in London would only reduce affordability from 11.7 →
+                    10.1"</p>
             </div>
         </header>
 
@@ -336,55 +510,67 @@
                     </div>
 
                     <div class="toggle-group">
-                        <button class="toggle-btn active" id="btn-demand" onclick="setDemandMode(true)">With Induced Demand</button>
+                        <button class="toggle-btn active" id="btn-demand" onclick="setDemandMode(true)">With Induced
+                            Demand</button>
                         <button class="toggle-btn" id="btn-supply" onclick="setDemandMode(false)">Supply Only</button>
                     </div>
 
                     <div class="parameter-group">
                         <label>
-                            <span>Supply Increase (%)</span>
+                            <span class="label-with-help">Supply Increase (%)<button class="help-btn"
+                                    onclick="showHelp('supply')">?</button></span>
                             <span class="value" id="supply-value">48%</span>
                         </label>
-                        <input type="range" id="supply-slider" min="5" max="80" value="48" step="1" oninput="updateModel()">
+                        <input type="range" id="supply-slider" min="5" max="80" value="48" step="1"
+                            oninput="updateModel()">
                         <p class="parameter-desc">Paper tested 5%, 15%, and 48% (1.6M homes)</p>
                     </div>
 
                     <hr class="section-divider">
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">Key Model Coefficients</p>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">Key Model
+                        Coefficients</p>
 
                     <div class="parameter-group">
                         <label>
-                            <span>Supply Effect (b₂)</span>
+                            <span class="label-with-help">Supply Effect (b₂)<button class="help-btn"
+                                    onclick="showHelp('b2')">?</button></span>
                             <span class="value" id="b2-value">-0.97</span>
                         </label>
-                        <input type="range" id="b2-slider" min="-3" max="-0.5" value="-0.97" step="0.01" oninput="updateModel()">
+                        <input type="range" id="b2-slider" min="-3" max="-0.5" value="-0.97" step="0.01"
+                            oninput="updateModel()">
                         <p class="parameter-desc">Paper: -0.97 | More negative = stronger supply effect</p>
                     </div>
 
                     <div class="parameter-group">
                         <label>
-                            <span>Demand Response (b₁ multiplier)</span>
+                            <span class="label-with-help">Demand Response (b₁ multiplier)<button class="help-btn"
+                                    onclick="showHelp('b1')">?</button></span>
                             <span class="value" id="b1-value">1.0x</span>
                         </label>
-                        <input type="range" id="b1-slider" min="0" max="1.5" value="1.0" step="0.05" oninput="updateModel()">
+                        <input type="range" id="b1-slider" min="0" max="1.5" value="1.0" step="0.05"
+                            oninput="updateModel()">
                         <p class="parameter-desc">1.0 = Paper's assumption | 0 = No induced demand</p>
                     </div>
 
                     <div class="parameter-group">
                         <label>
-                            <span>Filtering Multiplier</span>
+                            <span class="label-with-help">Filtering Multiplier<button class="help-btn"
+                                    onclick="showHelp('filter')">?</button></span>
                             <span class="value" id="filter-value">1.0x</span>
                         </label>
-                        <input type="range" id="filter-slider" min="1" max="2.5" value="1" step="0.1" oninput="updateModel()">
+                        <input type="range" id="filter-slider" min="1" max="2.5" value="1" step="0.1"
+                            oninput="updateModel()">
                         <p class="parameter-desc">Paper ignores filtering (1.0x) | Literature: 1.5-2.5x</p>
                     </div>
 
                     <div class="parameter-group">
                         <label>
-                            <span>Commuting Evolution</span>
+                            <span class="label-with-help">Commuting Evolution<button class="help-btn"
+                                    onclick="showHelp('commute')">?</button></span>
                             <span class="value" id="commute-value">2001 (Paper)</span>
                         </label>
-                        <input type="range" id="commute-slider" min="0" max="3" value="0" step="1" oninput="updateModel()">
+                        <input type="range" id="commute-slider" min="0" max="3" value="0" step="1"
+                            oninput="updateModel()">
                         <p class="parameter-desc">How much commuting patterns evolved since 2001</p>
                     </div>
                 </div>
@@ -393,7 +579,8 @@
                     <h2><span class="icon">💡</span> Key Insight</h2>
                     <div class="insight-box" id="insight-box">
                         <h4>Adjust parameters to see impact</h4>
-                        <p>Move the sliders to explore how different assumptions change the model's predictions about housing affordability.</p>
+                        <p>Move the sliders to explore how different assumptions change the model's predictions about
+                            housing affordability.</p>
                     </div>
                 </div>
             </div>
@@ -401,7 +588,7 @@
             <div class="results-panel">
                 <div class="card">
                     <h2><span class="icon">📊</span> Affordability Predictions</h2>
-                    
+
                     <div class="results-grid">
                         <div class="result-card baseline">
                             <div class="label">2012 Baseline</div>
@@ -489,20 +676,20 @@
             // Base effects calibrated to paper's results
             // Paper: 5% supply -> ~£10k price drop with supply coefficient of -0.97
             const b2Ratio = b2 / -0.97;
-            
+
             // Supply effect (negative = price drops)
             let supplyEffect = -10000 * (supplyPct / 5) * b2Ratio * filterMult * commuteMult;
-            
+
             // Demand effect (if new homes bring workers)
             let demandEffect = 0;
             if (withDemand) {
                 demandEffect = 2500 * (supplyPct / 5) * b1Mult;
             }
-            
+
             // Net price change
             const netPriceChange = supplyEffect + demandEffect;
             const newPrice = BASELINE_PRICE + netPriceChange;
-            
+
             // Affordability
             return newPrice / BASELINE_WAGE;
         }
@@ -510,11 +697,11 @@
         function getPaperPrediction(supplyPct, withDemand) {
             // Interpolate paper predictions
             const keys = Object.keys(paperPredictions).map(Number).sort((a, b) => a - b);
-            
+
             if (paperPredictions[supplyPct]) {
                 return withDemand ? paperPredictions[supplyPct].withDemand : paperPredictions[supplyPct].supplyOnly;
             }
-            
+
             // Linear interpolation
             let lower = keys[0], upper = keys[keys.length - 1];
             for (let i = 0; i < keys.length - 1; i++) {
@@ -524,10 +711,10 @@
                     break;
                 }
             }
-            
+
             const lowerVal = withDemand ? paperPredictions[lower].withDemand : paperPredictions[lower].supplyOnly;
             const upperVal = withDemand ? paperPredictions[upper].withDemand : paperPredictions[upper].supplyOnly;
-            
+
             const t = (supplyPct - lower) / (upper - lower);
             return lowerVal + t * (upperVal - lowerVal);
         }
@@ -560,7 +747,7 @@
 
             document.getElementById('paper-delta').textContent = (paperDelta >= 0 ? '+' : '') + paperDelta.toFixed(2);
             document.getElementById('paper-delta').className = 'delta ' + (paperDelta < 0 ? 'positive' : 'negative');
-            
+
             document.getElementById('your-delta').textContent = (yourDelta >= 0 ? '+' : '') + yourDelta.toFixed(2);
             document.getElementById('your-delta').className = 'delta ' + (yourDelta < 0 ? 'positive' : 'negative');
 
@@ -603,9 +790,9 @@
 
         function updateChart(b2, b1Mult, filterMult, commuteMult) {
             const supplyLevels = [5, 15, 30, 48, 60, 80];
-            
+
             const paperData = supplyLevels.map(s => getPaperPrediction(s, includeDemand));
-            const yourData = supplyLevels.map(s => 
+            const yourData = supplyLevels.map(s =>
                 simulateAffordability(s, b2, b1Mult, filterMult, commuteMult, includeDemand)
             );
 
@@ -688,13 +875,13 @@
         function updateComparisonTable(b2, b1Mult, filterMult, commuteMult) {
             const tbody = document.getElementById('comparison-body');
             const supplyLevels = [5, 15, 30, 48];
-            
+
             tbody.innerHTML = supplyLevels.map(s => {
                 const paper = getPaperPrediction(s, includeDemand);
                 const yours = simulateAffordability(s, b2, b1Mult, filterMult, commuteMult, includeDemand);
                 const diff = paper - yours;
                 const diffClass = diff > 0 ? 'positive' : 'negative';
-                
+
                 return `
                     <tr>
                         <td>${s}%</td>
@@ -706,8 +893,104 @@
             }).join('');
         }
 
+        // Help modal content
+        const helpContent = {
+            supply: {
+                title: 'Supply Increase (%)',
+                body: `
+                    <p>This controls <strong>how many new homes are added</strong> to London's housing stock, expressed as a percentage increase.</p>
+                    <div class="highlight">
+                        <strong>Key reference:</strong> The paper's main scenario is a 48% increase, equivalent to building <strong>1.6 million new homes</strong> in London.
+                    </div>
+                    <p>The paper tested three scenarios:</p>
+                    <p>• <strong>5%</strong> = ~167,000 homes</p>
+                    <p>• <strong>15%</strong> = ~500,000 homes</p>
+                    <p>• <strong>48%</strong> = 1.6 million homes</p>
+                    <p>Move this slider to see how different levels of construction would affect affordability predictions.</p>
+                `
+            },
+            b2: {
+                title: 'Supply Effect Coefficient (b₂)',
+                body: `
+                    <p>This is the <strong>key econometric parameter</strong> that determines how much house prices fall when housing supply increases.</p>
+                    <div class="formula">Price Change ≈ b₂ × Supply Change</div>
+                    <p>The paper estimates <strong>b₂ = -0.97</strong>, meaning a 1% increase in housing stock reduces prices by about 0.97%.</p>
+                    <div class="highlight">
+                        <strong>Why it matters:</strong> This value is estimated with uncertainty. If the true value is more negative (e.g., -1.5 or -2.0), supply increases would be <em>much more effective</em> than the paper suggests.
+                    </div>
+                    <p>Housing economics literature suggests values ranging from <strong>-0.5 to -2.5</strong> depending on market conditions and methodology.</p>
+                `
+            },
+            b1: {
+                title: 'Demand Response (b₁ multiplier)',
+                body: `
+                    <p>This controls <strong>induced demand</strong> — the idea that building more homes attracts more workers, partially offsetting the price-reducing effect of new supply.</p>
+                    <div class="highlight">
+                        <strong>The paper's assumption:</strong> Each new home brings proportional new workers who compete for housing, reducing the price benefit.
+                    </div>
+                    <p><strong>1.0x</strong> = Paper's full induced demand assumption</p>
+                    <p><strong>0.5x</strong> = Half the induced demand (some empty homes, retirees, etc.)</p>
+                    <p><strong>0.0x</strong> = No induced demand (pure supply effect)</p>
+                    <p>Critics argue the paper <em>overestimates</em> induced demand by assuming every dwelling brings workers. Many homes house retirees, students, or remain empty as investments.</p>
+                `
+            },
+            filter: {
+                title: 'Filtering Multiplier',
+                body: `
+                    <p><strong>Filtering</strong> is a well-documented housing economics phenomenon that the paper completely ignores.</p>
+                    <div class="highlight">
+                        <strong>How filtering works:</strong> When someone buys a new home, they vacate their old one. That home becomes available to someone else, who vacates <em>their</em> home, and so on — creating a "chain" of moves.
+                    </div>
+                    <p>Each new home built can improve affordability for <strong>multiple households</strong> through this chain effect.</p>
+                    <p><strong>1.0x</strong> = No filtering (paper's assumption)</p>
+                    <p><strong>1.5x</strong> = Each home helps 1.5 households</p>
+                    <p><strong>2.0x</strong> = Each home helps 2 households (empirical estimates)</p>
+                    <p>Academic studies suggest multipliers of <strong>1.5-2.5x</strong> are realistic.</p>
+                `
+            },
+            commute: {
+                title: 'Commuting Evolution',
+                body: `
+                    <p>The paper uses <strong>2001 Census commuting data</strong> to model spatial relationships — but commuting patterns changed dramatically between 2001 and 2012.</p>
+                    <div class="highlight">
+                        <strong>Major changes 2001-2012:</strong><br>
+                        • Oyster card introduced (2003)<br>
+                        • DLR and Overground expansions<br>
+                        • Thameslink upgrades<br>
+                        • Early remote work adoption
+                    </div>
+                    <p>More diffuse commuting means:</p>
+                    <p>• People can live further from work</p>
+                    <p>• Outer areas become better substitutes for central London</p>
+                    <p>• New supply has a <strong>larger effect</strong> on London prices</p>
+                    <p>The "frozen matrix" is one of the paper's most significant methodological flaws.</p>
+                `
+            }
+        };
+
+        function showHelp(topic) {
+            const content = helpContent[topic];
+            if (!content) return;
+
+            document.getElementById('modal-title').textContent = content.title;
+            document.getElementById('modal-body').innerHTML = content.body;
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function closeModal(event) {
+            if (!event || event.target.id === 'modal-overlay') {
+                document.getElementById('modal-overlay').classList.remove('active');
+            }
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
         // Initialize
         updateModel();
     </script>
 </body>
+
 </html>
