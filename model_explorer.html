@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Housing Affordability Model Explorer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .paper-ref {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .paper-ref h3 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .paper-claim {
+            font-style: italic;
+            color: var(--warning);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h2 .icon {
+            font-size: 1.2rem;
+        }
+
+        .parameter-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .parameter-group label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .parameter-group .value {
+            font-weight: 600;
+            color: var(--primary);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .parameter-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--bg-input);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .parameter-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .parameter-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .parameter-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+            opacity: 0.7;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card {
+            background: var(--bg-input);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .result-card .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .result-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .result-card.baseline .value { color: var(--text-secondary); }
+        .result-card.paper .value { color: var(--warning); }
+        .result-card.yours .value { color: var(--secondary); }
+
+        .result-card .delta {
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+        }
+
+        .delta.positive { color: var(--secondary); }
+        .delta.negative { color: var(--danger); }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.75rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .comparison-table .paper-col { color: var(--warning); }
+        .comparison-table .yours-col { color: var(--secondary); font-weight: 600; }
+
+        .toggle-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: var(--border);
+        }
+
+        .section-divider {
+            border: 0;
+            height: 1px;
+            background: var(--border);
+            margin: 1.5rem 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge.paper { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge.alt { background: rgba(16, 185, 129, 0.2); color: var(--secondary); }
+
+        .insight-box {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .insight-box h4 {
+            font-size: 0.9rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-box p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .reset-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏠 Housing Affordability Model Explorer</h1>
+            <p class="subtitle">Interactive simulation of Fingleton, Fuerst & Szumilo (2018)</p>
+            <div class="paper-ref">
+                <h3>Paper's Core Claim:</h3>
+                <p class="paper-claim">"Building 1.6 million homes in London would only reduce affordability from 11.7 → 10.1"</p>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <div class="controls-panel">
+                <div class="card">
+                    <div class="header-row">
+                        <h2><span class="icon">⚙️</span> Model Parameters</h2>
+                        <button class="reset-btn" onclick="resetToDefaults()">Reset to Paper</button>
+                    </div>
+
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" id="btn-demand" onclick="setDemandMode(true)">With Induced Demand</button>
+                        <button class="toggle-btn" id="btn-supply" onclick="setDemandMode(false)">Supply Only</button>
+                    </div>
+
+                    <div class="parameter-group">
+                        <label>
+                            <span>Supply Increase (%)</span>
+                            <span class="value" id="supply-value">48%</span>
+                        </label>
+                        <input type="range" id="supply-slider" min="5" max="80" value="48" step="1" oninput="updateModel()">
+                        <p class="parameter-desc">Paper tested 5%, 15%, and 48% (1.6M homes)</p>
+                    </div>
+
+                    <hr class="section-divider">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">Key Model Coefficients</p>
+
+                    <div class="parameter-group">
+                        <label>
+                            <span>Supply Effect (b₂)</span>
+                            <span class="value" id="b2-value">-0.97</span>
+                        </label>
+                        <input type="range" id="b2-slider" min="-3" max="-0.5" value="-0.97" step="0.01" oninput="updateModel()">
+                        <p class="parameter-desc">Paper: -0.97 | More negative = stronger supply effect</p>
+                    </div>
+
+                    <div class="parameter-group">
+                        <label>
+                            <span>Demand Response (b₁ multiplier)</span>
+                            <span class="value" id="b1-value">1.0x</span>
+                        </label>
+                        <input type="range" id="b1-slider" min="0" max="1.5" value="1.0" step="0.05" oninput="updateModel()">
+                        <p class="parameter-desc">1.0 = Paper's assumption | 0 = No induced demand</p>
+                    </div>
+
+                    <div class="parameter-group">
+                        <label>
+                            <span>Filtering Multiplier</span>
+                            <span class="value" id="filter-value">1.0x</span>
+                        </label>
+                        <input type="range" id="filter-slider" min="1" max="2.5" value="1" step="0.1" oninput="updateModel()">
+                        <p class="parameter-desc">Paper ignores filtering (1.0x) | Literature: 1.5-2.5x</p>
+                    </div>
+
+                    <div class="parameter-group">
+                        <label>
+                            <span>Commuting Evolution</span>
+                            <span class="value" id="commute-value">2001 (Paper)</span>
+                        </label>
+                        <input type="range" id="commute-slider" min="0" max="3" value="0" step="1" oninput="updateModel()">
+                        <p class="parameter-desc">How much commuting patterns evolved since 2001</p>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1rem;">
+                    <h2><span class="icon">💡</span> Key Insight</h2>
+                    <div class="insight-box" id="insight-box">
+                        <h4>Adjust parameters to see impact</h4>
+                        <p>Move the sliders to explore how different assumptions change the model's predictions about housing affordability.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-panel">
+                <div class="card">
+                    <h2><span class="icon">📊</span> Affordability Predictions</h2>
+                    
+                    <div class="results-grid">
+                        <div class="result-card baseline">
+                            <div class="label">2012 Baseline</div>
+                            <div class="value">11.70</div>
+                            <div class="delta">London avg</div>
+                        </div>
+                        <div class="result-card paper">
+                            <div class="label"><span class="badge paper">Paper</span></div>
+                            <div class="value" id="paper-result">10.09</div>
+                            <div class="delta" id="paper-delta">-1.61</div>
+                        </div>
+                        <div class="result-card yours">
+                            <div class="label"><span class="badge alt">Your Model</span></div>
+                            <div class="value" id="your-result">10.09</div>
+                            <div class="delta" id="your-delta">-1.61</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="affordabilityChart"></canvas>
+                    </div>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Supply Increase</th>
+                                <th class="paper-col">Paper's Prediction</th>
+                                <th class="yours-col">Your Model</th>
+                                <th>Difference</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Model constants
+        const BASELINE_AFFORDABILITY = 11.70;
+        const BASELINE_PRICE = 438960;
+        const BASELINE_WAGE = 37520;
+        const ENGLAND_AVG = 7.5;
+
+        // Paper's predictions for reference
+        const paperPredictions = {
+            5: { withDemand: 11.49, supplyOnly: 11.42 },
+            10: { withDemand: 11.28, supplyOnly: 11.14 },
+            15: { withDemand: 11.07, supplyOnly: 10.85 },
+            20: { withDemand: 10.86, supplyOnly: 10.56 },
+            30: { withDemand: 10.44, supplyOnly: 9.98 },
+            48: { withDemand: 10.09, supplyOnly: 9.73 },
+            60: { withDemand: 9.50, supplyOnly: 9.20 },
+            80: { withDemand: 8.70, supplyOnly: 8.30 }
+        };
+
+        const commuteLabels = ['2001 (Paper)', '2012 Evolved', 'Strong Evolution', 'Post-Pandemic'];
+        const commuteMultipliers = [1.0, 1.15, 1.30, 1.50];
+
+        let includeDemand = true;
+        let chart = null;
+
+        function setDemandMode(withDemand) {
+            includeDemand = withDemand;
+            document.getElementById('btn-demand').classList.toggle('active', withDemand);
+            document.getElementById('btn-supply').classList.toggle('active', !withDemand);
+            updateModel();
+        }
+
+        function resetToDefaults() {
+            document.getElementById('supply-slider').value = 48;
+            document.getElementById('b2-slider').value = -0.97;
+            document.getElementById('b1-slider').value = 1.0;
+            document.getElementById('filter-slider').value = 1.0;
+            document.getElementById('commute-slider').value = 0;
+            includeDemand = true;
+            document.getElementById('btn-demand').classList.add('active');
+            document.getElementById('btn-supply').classList.remove('active');
+            updateModel();
+        }
+
+        function simulateAffordability(supplyPct, b2, b1Mult, filterMult, commuteMult, withDemand) {
+            // Base effects calibrated to paper's results
+            // Paper: 5% supply -> ~£10k price drop with supply coefficient of -0.97
+            const b2Ratio = b2 / -0.97;
+            
+            // Supply effect (negative = price drops)
+            let supplyEffect = -10000 * (supplyPct / 5) * b2Ratio * filterMult * commuteMult;
+            
+            // Demand effect (if new homes bring workers)
+            let demandEffect = 0;
+            if (withDemand) {
+                demandEffect = 2500 * (supplyPct / 5) * b1Mult;
+            }
+            
+            // Net price change
+            const netPriceChange = supplyEffect + demandEffect;
+            const newPrice = BASELINE_PRICE + netPriceChange;
+            
+            // Affordability
+            return newPrice / BASELINE_WAGE;
+        }
+
+        function getPaperPrediction(supplyPct, withDemand) {
+            // Interpolate paper predictions
+            const keys = Object.keys(paperPredictions).map(Number).sort((a, b) => a - b);
+            
+            if (paperPredictions[supplyPct]) {
+                return withDemand ? paperPredictions[supplyPct].withDemand : paperPredictions[supplyPct].supplyOnly;
+            }
+            
+            // Linear interpolation
+            let lower = keys[0], upper = keys[keys.length - 1];
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (keys[i] <= supplyPct && keys[i + 1] >= supplyPct) {
+                    lower = keys[i];
+                    upper = keys[i + 1];
+                    break;
+                }
+            }
+            
+            const lowerVal = withDemand ? paperPredictions[lower].withDemand : paperPredictions[lower].supplyOnly;
+            const upperVal = withDemand ? paperPredictions[upper].withDemand : paperPredictions[upper].supplyOnly;
+            
+            const t = (supplyPct - lower) / (upper - lower);
+            return lowerVal + t * (upperVal - lowerVal);
+        }
+
+        function updateModel() {
+            const supplyPct = parseFloat(document.getElementById('supply-slider').value);
+            const b2 = parseFloat(document.getElementById('b2-slider').value);
+            const b1Mult = parseFloat(document.getElementById('b1-slider').value);
+            const filterMult = parseFloat(document.getElementById('filter-slider').value);
+            const commuteIdx = parseInt(document.getElementById('commute-slider').value);
+            const commuteMult = commuteMultipliers[commuteIdx];
+
+            // Update display values
+            document.getElementById('supply-value').textContent = supplyPct + '%';
+            document.getElementById('b2-value').textContent = b2.toFixed(2);
+            document.getElementById('b1-value').textContent = b1Mult.toFixed(2) + 'x';
+            document.getElementById('filter-value').textContent = filterMult.toFixed(1) + 'x';
+            document.getElementById('commute-value').textContent = commuteLabels[commuteIdx];
+
+            // Calculate predictions
+            const paperResult = getPaperPrediction(supplyPct, includeDemand);
+            const yourResult = simulateAffordability(supplyPct, b2, b1Mult, filterMult, commuteMult, includeDemand);
+
+            // Update result cards
+            document.getElementById('paper-result').textContent = paperResult.toFixed(2);
+            document.getElementById('your-result').textContent = yourResult.toFixed(2);
+
+            const paperDelta = paperResult - BASELINE_AFFORDABILITY;
+            const yourDelta = yourResult - BASELINE_AFFORDABILITY;
+
+            document.getElementById('paper-delta').textContent = (paperDelta >= 0 ? '+' : '') + paperDelta.toFixed(2);
+            document.getElementById('paper-delta').className = 'delta ' + (paperDelta < 0 ? 'positive' : 'negative');
+            
+            document.getElementById('your-delta').textContent = (yourDelta >= 0 ? '+' : '') + yourDelta.toFixed(2);
+            document.getElementById('your-delta').className = 'delta ' + (yourDelta < 0 ? 'positive' : 'negative');
+
+            // Update insight box
+            updateInsight(paperResult, yourResult, supplyPct, b2, filterMult, commuteIdx);
+
+            // Update chart
+            updateChart(b2, b1Mult, filterMult, commuteMult);
+
+            // Update comparison table
+            updateComparisonTable(b2, b1Mult, filterMult, commuteMult);
+        }
+
+        function updateInsight(paperResult, yourResult, supplyPct, b2, filterMult, commuteIdx) {
+            const insightBox = document.getElementById('insight-box');
+            const diff = paperResult - yourResult;
+            const pctBetter = ((paperResult - yourResult) / (BASELINE_AFFORDABILITY - paperResult) * 100);
+
+            let title, message;
+
+            if (Math.abs(diff) < 0.1) {
+                title = "Matching the Paper's Predictions";
+                message = "With current parameters, your model closely matches the paper's predictions. Try adjusting the supply coefficient or adding filtering effects to see alternative outcomes.";
+            } else if (yourResult <= ENGLAND_AVG) {
+                title = "🎯 Reaching England Average!";
+                message = `With these parameters, a ${supplyPct}% supply increase could reduce London affordability to ${yourResult.toFixed(2)} — matching or beating England's average of 7.5. This challenges the paper's pessimism.`;
+            } else if (diff > 1.5) {
+                title = "📈 Substantial Improvement Over Paper";
+                message = `Your model predicts ${diff.toFixed(1)} points MORE improvement than the paper (${yourResult.toFixed(2)} vs ${paperResult.toFixed(2)}). The paper may significantly underestimate supply effects.`;
+            } else if (diff > 0.5) {
+                title = "Moderate Improvement";
+                message = `Your model shows ${diff.toFixed(1)} points more improvement. Key drivers: ${filterMult > 1 ? 'filtering effects, ' : ''}${b2 < -1.2 ? 'stronger supply effect, ' : ''}${commuteIdx > 0 ? 'evolved commuting patterns' : ''}.`;
+            } else {
+                title = "Similar to Paper";
+                message = "Your parameters produce results close to the paper. The paper's conclusions may be reasonable under these specific assumptions.";
+            }
+
+            insightBox.innerHTML = `<h4>${title}</h4><p>${message}</p>`;
+        }
+
+        function updateChart(b2, b1Mult, filterMult, commuteMult) {
+            const supplyLevels = [5, 15, 30, 48, 60, 80];
+            
+            const paperData = supplyLevels.map(s => getPaperPrediction(s, includeDemand));
+            const yourData = supplyLevels.map(s => 
+                simulateAffordability(s, b2, b1Mult, filterMult, commuteMult, includeDemand)
+            );
+
+            if (chart) {
+                chart.data.datasets[0].data = paperData;
+                chart.data.datasets[1].data = yourData;
+                chart.update();
+            } else {
+                const ctx = document.getElementById('affordabilityChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: supplyLevels.map(s => s + '%'),
+                        datasets: [
+                            {
+                                label: "Paper's Prediction",
+                                data: paperData,
+                                borderColor: '#f59e0b',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Your Model',
+                                data: yourData,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderWidth: 3,
+                                fill: false,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#94a3b8' }
+                            },
+                            annotation: {
+                                annotations: {
+                                    baseline: {
+                                        type: 'line',
+                                        yMin: BASELINE_AFFORDABILITY,
+                                        yMax: BASELINE_AFFORDABILITY,
+                                        borderColor: 'rgba(148, 163, 184, 0.5)',
+                                        borderDash: [5, 5]
+                                    },
+                                    england: {
+                                        type: 'line',
+                                        yMin: ENGLAND_AVG,
+                                        yMax: ENGLAND_AVG,
+                                        borderColor: 'rgba(16, 185, 129, 0.5)',
+                                        borderDash: [5, 5]
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Supply Increase', color: '#94a3b8' },
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(71, 85, 105, 0.3)' }
+                            },
+                            y: {
+                                title: { display: true, text: 'Affordability Ratio', color: '#94a3b8' },
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(71, 85, 105, 0.3)' },
+                                min: 5,
+                                max: 12
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateComparisonTable(b2, b1Mult, filterMult, commuteMult) {
+            const tbody = document.getElementById('comparison-body');
+            const supplyLevels = [5, 15, 30, 48];
+            
+            tbody.innerHTML = supplyLevels.map(s => {
+                const paper = getPaperPrediction(s, includeDemand);
+                const yours = simulateAffordability(s, b2, b1Mult, filterMult, commuteMult, includeDemand);
+                const diff = paper - yours;
+                const diffClass = diff > 0 ? 'positive' : 'negative';
+                
+                return `
+                    <tr>
+                        <td>${s}%</td>
+                        <td class="paper-col">${paper.toFixed(2)}</td>
+                        <td class="yours-col">${yours.toFixed(2)}</td>
+                        <td class="delta ${diffClass}">${diff > 0 ? '+' : ''}${diff.toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Initialize
+        updateModel();
+    </script>
+</body>
+</html>
